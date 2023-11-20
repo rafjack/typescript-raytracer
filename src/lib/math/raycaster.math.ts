@@ -139,21 +139,14 @@ export class RayCasterArithmetic {
   }
 
   static multiplyMatrix(a: Matrix, b: Matrix): Matrix {
-    if (a.getColumns() != b.getRows()) {
-      throw new Error(
-        `Matrices can not be mulitplied. Columns of a = ${a.getColumns()} must match rows of b = ${b.getRows()};`
-      );
-    }
     const multiplicationResultNumbers: number[] = [];
-
-    const column = 0;
     for (let r = 0; r < a.getRows(); r++) {
       for (let c = 0; c < b.getColumns(); c++) {
-        let calc = 0;
-        for (let x = 0; x < a.getRows(); x++) {
-          calc += a.getNumber(r, x) * b.getNumber(x, c);
+        let result = 0;
+        for (let i = 0; i < a.getColumns(); i++) {
+          result += a.getNumber(r, i) * b.getNumber(i, c);
         }
-        multiplicationResultNumbers.push(calc);
+        multiplicationResultNumbers.push(result);
       }
     }
     return RayCasterBuilder.createMatrix(
@@ -164,31 +157,24 @@ export class RayCasterArithmetic {
   }
 
   static transposeMatrix(a: Matrix): Matrix {
-    const multiplicationResultNumbers: number[] = [];
-    for (let c = 0; c < a.getColumns(); c++) {
-      for (let r = 0; r < a.getRows(); r++) {
-        multiplicationResultNumbers.push(a.getNumber(r, c));
+    const numbers: number[] = [];
+    for (let r = 0; r < a.getRows(); r++) {
+      for (let c = 0; c < a.getColumns(); c++) {
+        numbers.push(a.getNumber(c, r));
       }
     }
-    return RayCasterBuilder.createMatrix(
-      multiplicationResultNumbers,
-      a.getColumns(),
-      a.getRows()
-    );
+    return RayCasterBuilder.createMatrix(numbers, a.getColumns(), a.getRows());
   }
 
   static getDeterminant(m: Matrix): number {
-    let result = 0;
-    if (m.getColumns() === 2) {
-      result =
-        m.getNumber(0, 0) * m.getNumber(1, 1) -
-        m.getNumber(0, 1) * m.getNumber(1, 0);
-    } else {
-      for (let c = 0; c < m.getColumns(); c++) {
-        result += m.getNumber(0, c) * this.getCofactor(m, 0, c);
-      }
+    if (m.getRows() === 2 && m.getColumns() === 2) {
+      return m.getNumber(0, 0) * m.getNumber(1, 1) - m.getNumber(0, 1) * m.getNumber(1, 0);
     }
-    return result;
+    let determinant = 0;
+    for (let c = 0; c < m.getColumns(); c++) {
+      determinant += m.getNumber(0, c) * this.getCofactor(m, 0, c);
+    }
+    return determinant;
   }
 
   static isInvertible(m: Matrix): boolean {
@@ -200,47 +186,45 @@ export class RayCasterArithmetic {
       throw new Error(`This matrix is not invertible`);
     }
     const inverse = this.nullMatrix(m);
+    const determinant = this.getDeterminant(m);
     for (let r = 0; r < m.getRows(); r++) {
       for (let c = 0; c < m.getColumns(); c++) {
         const cofactor = this.getCofactor(m, r, c);
-        inverse.setNumber(c, r, cofactor / this.getDeterminant(m));
+        inverse.setNumber(c, r, cofactor / determinant);
       }
     }
     return inverse;
   }
 
   static getCofactor(m: Matrix, row: number, column: number): number {
-    const cofactor = this.isOdd(row + column) ? -1 : 1;
-    return this.getMinor(m, row, column) * cofactor;
+    const minor = this.getMinor(m, row, column);
+    if (this.isOdd(row + column)) {
+      return 0 - minor;
+    }
+    return minor;
   }
 
   static isOdd(n: number) {
-    return n % 2 === 1 ? true : false;
+    return n % 2 === 1;
   }
 
   static getMinor(m: Matrix, row: number, column: number): number {
-    return this.getDeterminant(this.getSubmatrix(m, row, column));
+    const submatrix = this.getSubmatrix(m, row, column);
+    return this.getDeterminant(submatrix);
   }
 
   static getSubmatrix(m: Matrix, skipRow: number, skipColumn: number): Matrix {
     const numbers: number[] = [];
-
     for (let r = 0; r < m.getRows(); r++) {
-      if (r === skipRow) {
-        continue;
-      }
-      for (let c = 0; c < m.getColumns(); c++) {
-        if (c === skipColumn) {
-          continue;
+      if (r !== skipRow) {
+        for (let c = 0; c < m.getColumns(); c++) {
+          if (c !== skipColumn) {
+            numbers.push(m.getNumber(r, c));
+          }
         }
-        numbers.push(m.getNumber(r, c));
       }
     }
-    return RayCasterBuilder.createMatrix(
-      numbers,
-      m.getRows() - 1,
-      m.getColumns() - 1
-    );
+    return RayCasterBuilder.createMatrix(numbers, m.getRows() - 1, m.getColumns() - 1);
   }
 
   static cloneMatrix(m: Matrix): Matrix {
@@ -268,12 +252,12 @@ export class RayCasterArithmetic {
   }
 
   static multiplyMatrixWithVector(transM: Matrix, vector: Vector): Vector {
-    const pM: Matrix = RayCasterBuilder.createMatrix(
+    const vM: Matrix = RayCasterBuilder.createMatrix(
       [vector.x, vector.y, vector.z, vector.w],
       4,
       1
     );
-    const resultM: Matrix = this.multiplyMatrix(transM, pM);
+    const resultM: Matrix = this.multiplyMatrix(transM, vM);
     return new Vector(
       resultM.getNumber(0, 0),
       resultM.getNumber(1, 0),
@@ -304,28 +288,28 @@ export class RayCasterArithmetic {
   }
 
   static getRadians(degrees: number): number {
-    return (degrees / 180) * Math.PI;
+    return (degrees * Math.PI) / 180;
   }
 
   static getRayPosition(ray: Ray, t: number): Point {
-    const newPoint = this.multiplyPoint(ray.getDirection(), t);
-    return this.addPoints(ray.getOrigin(), newPoint);
+    return this.addTuples(ray.getOrigin(), this.multiplyVector(ray.getDirection(), t));
   }
 
   static numberEquals(x: number, y: number) {
     return Math.abs(x - y) < RAYCASTER_EPSILON;
   }
 
-  static getHit(intersections: Intersections): Intersection {
+  static getHit(intersections: Intersections): Intersection | null {
     const candidates: Intersection[] = [];
-    for (let i = 0; i < intersections.getCount(); i++) {
-      if (intersections.getIntersectionAt(i).getT() >= 0) {
-        candidates.push(intersections.getIntersectionAt(i));
+    for (const intersection of intersections.getIntersections()) {
+      if (intersection.getT() >= 0) {
+        candidates.push(intersection);
       }
     }
-    candidates.sort(function (a, b) {
-      return a.getT() - b.getT();
-    });
+    candidates.sort((a, b) => a.getT() - b.getT());
+    if (candidates.length === 0) {
+      return null;
+    }
     return candidates[0];
   }
 
@@ -485,25 +469,25 @@ export class RayCasterArithmetic {
     const lightSource = world.getLightSource();
     if (lightSource) {
       const isShadowed: boolean = RayCasterArithmetic.isShadowed(
-        world,
-        computations.getOverPoint()
-      );
+            world,
+            computations.getOverPoint()
+        );
 
       return RayCasterArithmetic.lighting(
-        computations.getObject().getMaterial(),
-        lightSource,
-        computations.getOverPoint(),
-        computations.getEyeV(),
-        computations.getNormalV(),
-        isShadowed
-      );
+            computations.getObject().getMaterial(),
+            lightSource,
+            computations.getOverPoint(),
+            computations.getEyeV(),
+            computations.getNormalV(),
+            isShadowed
+        );
     }
     throw new Error('Unable to calculate shade without lightSource in world');
   }
 
   static colorAt(world: World, ray: Ray): Color {
     const intersections: Intersections = world.intersect(ray);
-    const intersectionResult: Intersection =
+    const intersectionResult: Intersection  | null =
       RayCasterArithmetic.getHit(intersections);
     if (intersectionResult) {
       const preparedComputations = RayCasterArithmetic.prepareComputations(
@@ -599,7 +583,7 @@ export class RayCasterArithmetic {
       const interSections: Intersections = world.intersect(shadowRay);
 
       // check if there was a hit
-      const hit: Intersection = RayCasterArithmetic.getHit(interSections);
+      const hit: Intersection | null = RayCasterArithmetic.getHit(interSections);
 
       // when the hit is smaller then the distance point is shadowed
       if (hit && hit.getT() < vDistance) {

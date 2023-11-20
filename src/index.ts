@@ -1,14 +1,13 @@
 import "./app.ts";
-
-import {RayCasterBuilder} from "./lib/builder/raycaster.builder";
 import {RayCasterImager} from "./lib/imaging/raycaster.imaging";
 import {RayCasterArithmetic} from "./lib/math/raycaster.math";
 import {Camera, Color, Light, Material, Plane, Point, Sphere, Vector, World} from "./lib/model/raycaster.model";
+import {RayCasterBuilder} from "./lib/builder/raycaster.builder";
 
 export class RaycasterCanvasComponent {
 
     size = 400;
-    sectorSize = this.size < 100  ? Math.round((this.size / 100) * 10) : (this.size / 100) * 10;
+    sectorSize = this.size < 100 ? Math.round((this.size / 100) * 10) : (this.size / 100) * 10;
     counterFrom_X = 0;
     counterTo_X = this.sectorSize;
     counterFrom_Y = 0;
@@ -20,6 +19,7 @@ export class RaycasterCanvasComponent {
 
     rawImageData: Uint8ClampedArray | null;
     ctx: CanvasRenderingContext2D | null;
+
     constructor() {
         this.canvasImageData = null;
         this.rawImageData = null;
@@ -49,13 +49,12 @@ export class RaycasterCanvasComponent {
 
     fillCanvasWithBlack() {
         if (this.ctx && this.rawImageData && this.canvasImageData) {
-            RayCasterImager.fillWithBlack(this.rawImageData, this.size, this.size);
+            RayCasterImager.fillWithBlack(this.rawImageData, this.size, this.size)
             this.ctx.putImageData(this.canvasImageData, 0, 0);
         }
     }
 
     draw(from_x: number, to_x: number, from_y: number, to_y: number) {
-        console.log('draw');
         const plane: Plane = RayCasterBuilder.createPlane();
         plane.setMatrix(RayCasterBuilder.getTranslationMatrix(0, 0.01, 0));
         const floorMaterial: Material = plane.getMaterial();
@@ -63,16 +62,13 @@ export class RaycasterCanvasComponent {
         floorMaterial.setSpecular(0);
         plane.setMaterial(floorMaterial);
 
-        // The large sphere in the middle is a unit sphere translated upward slightly and colored green
         const middleSphere: Sphere = RayCasterBuilder.createSphere();
         middleSphere.setMatrix(RayCasterBuilder.getTranslationMatrix(-0.5, 1, 0.5));
         const middleSphereMaterial: Material = middleSphere.getMaterial();
-        middleSphereMaterial.setColor(new Color(0.1, 1, 0.5));
         middleSphereMaterial.setDiffuse(0.7);
         middleSphereMaterial.setSpecular(0.3);
         middleSphere.setMaterial(middleSphereMaterial);
 
-        // the smaller green sphere on the right is scaled half
         const rightSphere: Sphere = RayCasterBuilder.createSphere();
         rightSphere.setMatrix(
             RayCasterArithmetic.multiplyMatrix(
@@ -81,12 +77,10 @@ export class RaycasterCanvasComponent {
             )
         );
         const rightSphereMaterial: Material = rightSphere.getMaterial();
-        rightSphereMaterial.setColor(new Color(0.5, 1, 0.1));
         rightSphereMaterial.setDiffuse(0.7);
         rightSphereMaterial.setSpecular(0.3);
         rightSphere.setMaterial(rightSphereMaterial);
 
-        // the smallest sphere is scaled by a third, before being translated.
         const leftSphere: Sphere = RayCasterBuilder.createSphere();
         leftSphere.setMatrix(
             RayCasterArithmetic.multiplyMatrix(
@@ -95,25 +89,22 @@ export class RaycasterCanvasComponent {
             )
         );
         const leftSphereMaterial: Material = leftSphere.getMaterial();
-        leftSphereMaterial.setColor(new Color(1, 0.8, 0.1));
-        leftSphereMaterial.setDiffuse(0.7);
-        leftSphereMaterial.setSpecular(0.3);
+        rightSphereMaterial.setDiffuse(0.7);
+        rightSphereMaterial.setSpecular(0.3);
         leftSphere.setMaterial(leftSphereMaterial);
 
         const world: World = RayCasterBuilder.createDefaultWorld();
-        const lightSource: Light = RayCasterBuilder.createPointLight(
-            new Point(0, 20, -10),
-            new Color(1, 1, 1)
-        );
-        world.setLightSource(lightSource);
-        //world.setShapes([plane, leftSphere, middleSphere, rightSphere]);
-        world.setShapes([plane]);
 
-        const camera: Camera = RayCasterBuilder.createCamera(
-            this.size,
-            this.size,
-            Math.PI / 3
-        );
+        const lightSource: Light = RayCasterBuilder.createPointLight(new Point(-10, 10, -10), new Color(1, 1, 1));
+
+        world.setLightSource(lightSource);
+        world.setShapes([plane, leftSphere, middleSphere, rightSphere]);
+
+        // only add the plane and middleSphere to the world
+        // world.setShapes([plane, middleSphere]);
+
+        const camera: Camera = RayCasterBuilder.createCamera(this.size, this.size, Math.PI / 3);
+
         camera.setTranform(
             RayCasterArithmetic.viewTransform(
                 new Point(0, 1.5, -5),

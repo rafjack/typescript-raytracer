@@ -1166,9 +1166,14 @@ describe('raycaster.math.spec', () => {
     let i1: Intersection = RayCasterBuilder.createIntersection(1, sphere);
     let i2: Intersection = RayCasterBuilder.createIntersection(2, sphere);
     let intersections: Intersections = new Intersections(i1, i2);
-    const intersectionResult: Intersection =
+    const intersectionResult: Intersection | null =
       RayCasterArithmetic.getHit(intersections);
+    if(intersectionResult !== null) {
     expect(intersectionResult.equals(i1)).toBeTruthy();
+    }
+    else {
+      expect(false).toBeTruthy();
+    }
   });
 
   it('The hit, when some intersections have negative t', () => {
@@ -1176,9 +1181,14 @@ describe('raycaster.math.spec', () => {
     let i1: Intersection = RayCasterBuilder.createIntersection(-1, sphere);
     let i2: Intersection = RayCasterBuilder.createIntersection(2, sphere);
     let intersections: Intersections = new Intersections(i1, i2);
-    const intersectionResult: Intersection =
+    const intersectionResult: Intersection | null =
       RayCasterArithmetic.getHit(intersections);
-    expect(intersectionResult.equals(i2)).toBeTruthy();
+    if(intersectionResult !== null) {
+      expect(intersectionResult.equals(i2)).toBeTruthy();
+    }
+    else {
+      expect(false).toBeTruthy();
+    }
   });
 
   it('The hit, when all intersections have negative t', () => {
@@ -1186,9 +1196,9 @@ describe('raycaster.math.spec', () => {
     let i1: Intersection = RayCasterBuilder.createIntersection(-1, sphere);
     let i2: Intersection = RayCasterBuilder.createIntersection(-2, sphere);
     let intersections: Intersections = new Intersections(i1, i2);
-    const intersectionResult: Intersection =
-      RayCasterArithmetic.getHit(intersections);
-    expect(intersectionResult === undefined).toBeTruthy();
+    const intersectionResult: Intersection | null =
+    RayCasterArithmetic.getHit(intersections);
+    expect(intersectionResult === null).toBeTruthy();
   });
 
   it('The hit is always the lowes nonegative intersection', () => {
@@ -1198,9 +1208,14 @@ describe('raycaster.math.spec', () => {
     let i3: Intersection = RayCasterBuilder.createIntersection(-3, sphere);
     let i4: Intersection = RayCasterBuilder.createIntersection(2, sphere);
     let intersections: Intersections = new Intersections(i1, i2, i3, i4);
-    const intersectionResult: Intersection =
+    const intersectionResult: Intersection | null =
       RayCasterArithmetic.getHit(intersections);
-    expect(intersectionResult.equals(i4)).toBeTruthy();
+    if(intersectionResult !== null) {
+      expect(intersectionResult.equals(i4)).toBeTruthy();
+    }
+    else {
+      expect(false).toBeTruthy();
+    }
   });
 
   it('Translating a ray', () => {
