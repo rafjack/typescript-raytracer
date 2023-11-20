@@ -56,21 +56,21 @@ export class RaycasterCanvasComponent {
 
     draw(from_x: number, to_x: number, from_y: number, to_y: number) {
         const plane: Plane = RayCasterBuilder.createPlane();
-        plane.setMatrix(RayCasterBuilder.getTranslationMatrix(0, 0.01, 0));
+        plane.setTransform(RayCasterBuilder.getTranslationMatrix(0, 0.01, 0));
         const floorMaterial: Material = plane.getMaterial();
         floorMaterial.setColor(new Color(1, 0.9, 0.9));
         floorMaterial.setSpecular(0);
         plane.setMaterial(floorMaterial);
 
         const middleSphere: Sphere = RayCasterBuilder.createSphere();
-        middleSphere.setMatrix(RayCasterBuilder.getTranslationMatrix(-0.5, 1, 0.5));
+        middleSphere.setTransform(RayCasterBuilder.getTranslationMatrix(-0.5, 1, 0.5));
         const middleSphereMaterial: Material = middleSphere.getMaterial();
         middleSphereMaterial.setDiffuse(0.7);
         middleSphereMaterial.setSpecular(0.3);
         middleSphere.setMaterial(middleSphereMaterial);
 
         const rightSphere: Sphere = RayCasterBuilder.createSphere();
-        rightSphere.setMatrix(
+        rightSphere.setTransform(
             RayCasterArithmetic.multiplyMatrix(
                 RayCasterBuilder.getTranslationMatrix(1.5, 0.5, -0.5),
                 RayCasterBuilder.getScalingMatrix(0.5, 0.5, 0.5)
@@ -82,7 +82,7 @@ export class RaycasterCanvasComponent {
         rightSphere.setMaterial(rightSphereMaterial);
 
         const leftSphere: Sphere = RayCasterBuilder.createSphere();
-        leftSphere.setMatrix(
+        leftSphere.setTransform(
             RayCasterArithmetic.multiplyMatrix(
                 RayCasterBuilder.getTranslationMatrix(-1.5, 0.33, -0.75),
                 RayCasterBuilder.getScalingMatrix(0.33, 0.33, 0.33)
