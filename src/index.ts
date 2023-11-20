@@ -45,6 +45,17 @@ export class RaycasterCanvasComponent {
             this.size < 100
                 ? Math.round((this.size / 100) * 10)
                 : (this.size / 100) * 10;
+
+
+        let uid = RayCasterBuilder.uuid()
+
+        const body = document.getElementsByTagName("body")[0];
+        const div = document.createElement("div");
+        const text = document.createTextNode(uid);
+        div.appendChild(text);
+        body.appendChild(div);
+
+        window.history.pushState({}, uid, `?uid=${uid}`);
     }
 
     fillCanvasWithBlack() {
@@ -157,6 +168,8 @@ export class RaycasterCanvasComponent {
             }
         }
     }
+
+
 }
 
 let rayCasterCanvasComponent = new RaycasterCanvasComponent();
