@@ -6,9 +6,28 @@
 
     <script src="./src/index.ts" type="module">
     </script>
+    <style>
+        /* Style for the canvas container */
+        .canvas-container {
+            position: relative;
+            width: 50%;
+            overflow: hidden;
+            resize: both; /* Enables resizing */
+            border: 1px solid #ccc; /* Add a border for better visibility */
+        }
+
+        /* Style for the canvas itself */
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
 
 </head>
 <body>
-<canvas id="raycasterCanvas"></canvas>
+<div class="canvas-container">
+    <canvas id="raycasterCanvas"></canvas>
+</div>
 </body>
 </html>
