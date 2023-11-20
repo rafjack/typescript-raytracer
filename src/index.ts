@@ -48,14 +48,81 @@ export class RaycasterCanvasComponent {
 
 
         let uid = RayCasterBuilder.uuid()
-
-        const body = document.getElementsByTagName("body")[0];
-        const div = document.createElement("div");
-        const text = document.createTextNode(uid);
-        div.appendChild(text);
-        body.appendChild(div);
-
+        const canvasParent = this.canvas.parentNode;
         window.history.pushState({}, uid, `?uid=${uid}`);
+        const resizableContainer = canvasParent;
+        var self = this;
+        // bind the mouse down event to startResize function
+        if (resizableContainer) {
+
+            resizableContainer.addEventListener('mousedown', e => {
+                startResizing(e);
+            });
+
+            // Function to start resizing
+            function startResizing(e: Event) {
+                e.preventDefault();
+
+                // Initial mouse position
+                const initialX = e.clientX;
+                const initialY = e.clientY;
+
+                // Initial dimensions of the resizable container
+                // @ts-ignore
+                const initialWidth = resizableContainer.offsetWidth;
+                // @ts-ignore
+                const initialHeight = resizableContainer.offsetHeight;
+
+                // Aspect ratio of the resizable container
+                const aspectRatio = initialWidth / initialHeight;
+
+                // Function to handle mouse move
+                function handleMouseMove(e: MouseEvent) {
+                    const deltaX = e.clientX - initialX;
+                    const deltaY = e.clientY - initialY;
+
+                    // Calculate the new width and height while maintaining the aspect ratio
+                    const newWidth = initialWidth + deltaX;
+                    const newHeight = newWidth / aspectRatio;
+
+                    // Apply the new dimensions to the resizable container
+                    // @ts-ignore
+                    resizableContainer.style.width = `${newWidth}px`;
+                    // @ts-ignore
+                    resizableContainer.style.height = `${newHeight}px`;
+                }
+
+                // Function to handle mouse up
+                function handleMouseUp() {
+                    // Remove event listeners on mouse up
+                    window.removeEventListener('mousemove', handleMouseMove);
+                    window.removeEventListener('mouseup', handleMouseUp);
+                }
+
+                // Add event listeners for mouse move and mouse up
+                window.addEventListener('mousemove', handleMouseMove);
+                window.addEventListener('mouseup', handleMouseUp);
+
+                // Add event listener for mouse release
+                window.addEventListener('mouseup', handleMouseRelease);
+
+                // function to handle mouse release
+                function handleMouseRelease(e: MouseEvent) {
+                    e.preventDefault();
+                    // Remove event listeners on mouse release
+                    window.removeEventListener('mousemove', handleMouseMove);
+                    window.removeEventListener('mouseup', handleMouseUp);
+                    window.removeEventListener('mouseup', handleMouseRelease);
+                    // call the resize canvas function
+                    self.reset();
+                }
+            }
+        }
+    }
+
+    reset() {
+       
+
     }
 
     fillCanvasWithBlack() {
