@@ -3,6 +3,7 @@ import {RayCasterImager} from "./lib/imaging/raycaster.imaging";
 import {RayCasterArithmetic} from "./lib/math/raycaster.math";
 import {Camera, Color, Light, Material, Plane, Point, Sphere, Vector, World} from "./lib/model/raycaster.model";
 import {RayCasterBuilder} from "./lib/builder/raycaster.builder";
+import {BLACK, WHITE} from "./lib/constants/raycaster.constants";
 
 export class RaycasterCanvasComponent {
 
@@ -121,7 +122,6 @@ export class RaycasterCanvasComponent {
     }
 
     reset() {
-       
 
     }
 
@@ -145,6 +145,7 @@ export class RaycasterCanvasComponent {
         const middleSphereMaterial: Material = middleSphere.getMaterial();
         middleSphereMaterial.setDiffuse(0.7);
         middleSphereMaterial.setSpecular(0.3);
+        middleSphereMaterial.pattern = RayCasterBuilder.buildStripePattern(WHITE, BLACK);
         middleSphere.setMaterial(middleSphereMaterial);
 
         const rightSphere: Sphere = RayCasterBuilder.createSphere();
@@ -167,8 +168,9 @@ export class RaycasterCanvasComponent {
             )
         );
         const leftSphereMaterial: Material = leftSphere.getMaterial();
-        rightSphereMaterial.setDiffuse(0.7);
-        rightSphereMaterial.setSpecular(0.3);
+        leftSphereMaterial.setDiffuse(0.7);
+        leftSphereMaterial.setSpecular(0.3);
+        leftSphereMaterial.pattern = RayCasterBuilder.buildStripePattern(WHITE, BLACK);
         leftSphere.setMaterial(leftSphereMaterial);
 
         const world: World = RayCasterBuilder.createDefaultWorld();

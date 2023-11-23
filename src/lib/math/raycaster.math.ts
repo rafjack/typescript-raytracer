@@ -18,10 +18,7 @@ import {
     Vector,
     World,
 } from '../model/raycaster.model';
-
-export const RAYCASTER_EPSILON = 0.00001;
-
-//export const RAYCASTER_EPSILON: number = Number.EPSILON;
+import {RAYCASTER_EPSILON} from "../constants/raycaster.constants";
 
 export class RayCasterArithmetic {
     static addPoints(a: Point, b: Point): Vector {
@@ -372,13 +369,20 @@ export class RayCasterArithmetic {
 
     static lighting(
         material: Material,
+        shape: Shape,
         light: Light,
         point: Point,
         eyeVector: Vector,
         normalVector: Vector,
         inShadow = false
     ): Color {
-        let color: Color = material.getColor()
+        let color: Color;
+
+        if (material.pattern) {
+            color = material.pattern.colorAtShape(shape, point);
+        } else {
+            color = material.getColor();
+        }
 
         // find the direction to the light source
         const lightVector: Vector = RayCasterArithmetic.normalize(
@@ -497,6 +501,7 @@ export class RayCasterArithmetic {
 
             return RayCasterArithmetic.lighting(
                 computations.getObject().getMaterial(),
+                computations.getObject(),
                 lightSource,
                 computations.getOverPoint(),
                 computations.getEyeV(),

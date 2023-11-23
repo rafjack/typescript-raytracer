@@ -1,22 +1,23 @@
 import {RayCasterArithmetic} from '../math/raycaster.math';
 import {
-  Camera,
-  Canvas,
-  Color,
-  Intersection,
-  Light,
-  Material,
-  Matrix,
-  Plane,
-  Point,
-  Ray,
-  Shape,
-  Sphere,
-  TestShape,
-  Tuple,
-  Vector,
-  World,
+    Camera,
+    Canvas,
+    Color,
+    Intersection,
+    Light,
+    Material,
+    Matrix,
+    Plane,
+    Point,
+    Ray,
+    Shape,
+    Sphere,
+    TestShape,
+    Tuple,
+    Vector,
+    World,
 } from '../model/raycaster.model';
+import {StripePattern} from "../feature/raycaster.pattern";
 
 export class RayCasterBuilder {
     static createMatrix(
@@ -205,5 +206,9 @@ export class RayCasterBuilder {
         fieldOfView: number
     ): Camera {
         return new Camera(hsize, vsize, fieldOfView);
+    }
+
+    static buildStripePattern(WHITE: Color, BLACK: Color): StripePattern {
+        return new StripePattern(WHITE, BLACK);
     }
 }

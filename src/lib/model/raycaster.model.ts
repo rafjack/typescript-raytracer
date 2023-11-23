@@ -1,5 +1,6 @@
 import {RayCasterBuilder} from '../builder/raycaster.builder';
 import {RayCasterArithmetic} from '../math/raycaster.math';
+import {Pattern} from "../feature/raycaster.pattern";
 
 export class Tuple {
     constructor(
@@ -236,13 +237,15 @@ export abstract class Shape {
     }
 
     getMaterial(): Material {
-        return RayCasterBuilder.createMaterial(
+        const temp = RayCasterBuilder.createMaterial(
             this.material.getAmbient(),
             this.material.getDiffuse(),
             this.material.getSpecular(),
             this.material.getShininess(),
             this.material.getColor()
         );
+        temp.pattern = this.material.pattern;
+        return temp;
     }
 
     setMaterial(material: Material) {
@@ -251,8 +254,9 @@ export abstract class Shape {
             material.getDiffuse(),
             material.getSpecular(),
             material.getShininess(),
-            material.getColor()
+            material.getColor(),
         );
+        this.material.pattern = material.pattern;
     }
 
     normalAt(point: Point): Vector {
@@ -445,6 +449,9 @@ export class Light {
 }
 
 export class Material {
+
+    pattern: Pattern | undefined;
+
     constructor(
         private ambient = 0.1,
         private diffuse = 0.9,

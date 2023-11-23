@@ -1,23 +1,24 @@
 import {RayCasterBuilder} from '../builder/raycaster.builder';
-import {RAYCASTER_EPSILON, RayCasterArithmetic} from '../math/raycaster.math';
+import {RayCasterArithmetic} from '../math/raycaster.math';
 import {
-  Camera,
-  Color,
-  Computations,
-  Environment,
-  Intersection,
-  Intersections,
-  Light,
-  Material,
-  Matrix,
-  Point,
-  Projectile,
-  Ray,
-  Sphere,
-  Tuple,
-  Vector,
-  World,
+    Camera,
+    Color,
+    Computations,
+    Environment,
+    Intersection,
+    Intersections,
+    Light,
+    Material,
+    Matrix,
+    Point,
+    Projectile,
+    Ray,
+    Sphere,
+    Tuple,
+    Vector,
+    World,
 } from '../model/raycaster.model';
+import {RAYCASTER_EPSILON} from "../constants/raycaster.constants";
 
 describe('raycaster.math.spec', () => {
     it('adding vector and point create point', () => {
@@ -1441,6 +1442,7 @@ describe('raycaster.math.spec', () => {
         // WHEN
         const lightingColor: Color = RayCasterArithmetic.lighting(
             material,
+            RayCasterBuilder.createSphere(),
             light,
             position,
             eyev,
@@ -1469,6 +1471,7 @@ describe('raycaster.math.spec', () => {
         // WHEN
         const lightingColor: Color = RayCasterArithmetic.lighting(
             material,
+            RayCasterBuilder.createSphere(),
             light,
             position,
             eyev,
@@ -1501,6 +1504,7 @@ describe('raycaster.math.spec', () => {
         // WHEN
         const lightingColor: Color = RayCasterArithmetic.lighting(
             material,
+            RayCasterBuilder.createSphere(),
             light,
             position,
             eyev,
@@ -1528,6 +1532,7 @@ describe('raycaster.math.spec', () => {
         // WHEN
         const lightingColor: Color = RayCasterArithmetic.lighting(
             material,
+            RayCasterBuilder.createSphere(),
             light,
             position,
             eyev,
@@ -1563,6 +1568,7 @@ describe('raycaster.math.spec', () => {
         // WHEN
         const lightingColor: Color = RayCasterArithmetic.lighting(
             material,
+            RayCasterBuilder.createSphere(),
             light,
             position,
             eyev,
@@ -1594,6 +1600,7 @@ describe('raycaster.math.spec', () => {
         // WHEN
         const lightingColor: Color = RayCasterArithmetic.lighting(
             material,
+            RayCasterBuilder.createSphere(),
             light,
             position,
             eyev,
