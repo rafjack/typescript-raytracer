@@ -1,8 +1,8 @@
-import {RayCasterBuilder} from '../builder/raycaster.builder';
-import {BLACK, WHITE} from "../constants/raycaster.constants";
-import {Pattern, StripePattern} from "./raycaster.pattern";
-import {Color, Light, Material, Point} from "../model/raycaster.model";
-import {RayCasterArithmetic} from "../math/raycaster.math";
+import {RayCasterBuilder} from '../src/lib/builder/raycaster.builder';
+import {BLACK, WHITE} from "../src/lib/constants/raycaster.constants";
+import {Pattern, StripePattern} from "../src/lib/feature/raycaster.pattern";
+import {Color, Light, Material, Point} from "../src/lib/model/raycaster.model";
+import {RayCasterArithmetic} from "../src/lib/math/raycaster.math";
 
 describe('raycaster.pattern.spec', () => {
 

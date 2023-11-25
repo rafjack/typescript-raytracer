@@ -1,5 +1,5 @@
-import {RayCasterBuilder} from '../builder/raycaster.builder';
-import {RayCasterArithmetic} from '../math/raycaster.math';
+import {RayCasterBuilder} from '../src/lib/builder/raycaster.builder';
+import {RayCasterArithmetic} from '../src/lib/math/raycaster.math';
 import {
     Camera,
     Color,
@@ -17,8 +17,8 @@ import {
     Tuple,
     Vector,
     World,
-} from '../model/raycaster.model';
-import {RAYCASTER_EPSILON} from "../constants/raycaster.constants";
+} from '../src/lib/model/raycaster.model';
+import {RAYCASTER_EPSILON} from "../src/lib/constants/raycaster.constants";
 
 describe('raycaster.math.spec', () => {
     it('adding vector and point create point', () => {

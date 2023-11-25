@@ -1,24 +1,24 @@
-import {RayCasterBuilder} from '../builder/raycaster.builder';
-import {RayCasterArithmetic} from '../math/raycaster.math';
+import {RayCasterBuilder} from '../src/lib/builder/raycaster.builder';
+import {RayCasterArithmetic} from '../src/lib/math/raycaster.math';
 import {
-  Camera,
-  Canvas,
-  Color,
-  Intersection,
-  Intersections,
-  Light,
-  Material,
-  Matrix,
-  Plane,
-  Point,
-  Ray,
-  Shape,
-  Sphere,
-  TestShape,
-  Tuple,
-  Vector,
-  World,
-} from '../model/raycaster.model';
+    Camera,
+    Canvas,
+    Color,
+    Intersection,
+    Intersections,
+    Light,
+    Material,
+    Matrix,
+    Plane,
+    Point,
+    Ray,
+    Shape,
+    Sphere,
+    TestShape,
+    Tuple,
+    Vector,
+    World,
+} from '../src/lib/model/raycaster.model';
 
 describe('raycaster.builder.spec', () => {
     it('create tuple as point', () => {
