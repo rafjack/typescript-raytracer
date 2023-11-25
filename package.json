@@ -8,7 +8,7 @@
   "scripts": {
     "test": "jest",
     "testandwatch": "jest --watch",
-    "build": "parcel build --production"
+    "build": "parcel build"
   },
   "keywords": [],
   "author": "",
