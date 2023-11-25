@@ -1,5 +1,5 @@
 {
-  "name": "typescriptraytracer",
+  "name": "@rafjack/typescript-raytracer",
   "version": "1.0.0",
   "description": "a raytracer library written in typescript for use in node and the browser",
   "source": "src/index.ts",
