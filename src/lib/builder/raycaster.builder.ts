@@ -17,7 +17,16 @@ import {
     Vector,
     World,
 } from '../model/raycaster.model';
-import {StripePattern} from "../feature/raycaster.pattern";
+import {
+    BlendedPattern,
+    CheckerPattern,
+    GradientPattern,
+    NestedPattern,
+    Pattern,
+    PerturbedPattern,
+    RingPattern,
+    StripePattern
+} from "../feature/raycaster.pattern";
 
 export class RayCasterBuilder {
     static createMatrix(
@@ -211,4 +220,42 @@ export class RayCasterBuilder {
     static buildStripePattern(WHITE: Color, BLACK: Color): StripePattern {
         return new StripePattern(WHITE, BLACK);
     }
+
+    static createGradientPattern(WHITE: Color, BLACK: Color): GradientPattern {
+        return new GradientPattern(WHITE, BLACK);
+    }
+
+    static createRingPattern(WHITE: Color, BLACK: Color): RingPattern {
+        return new RingPattern(WHITE, BLACK);
+    }
+
+    static createCheckersPattern(WHITE: Color, BLACK: Color): CheckerPattern {
+        return new CheckerPattern(WHITE, BLACK);
+    }
+
+    static createNestedStripeAndGradientPattern(a: Color, b: Color): Pattern {
+        const stripePattern = this.buildStripePattern(a, b);
+        const gradientPattern = this.createGradientPattern(a, b);
+        return new NestedPattern(stripePattern, gradientPattern);
+    }
+
+    static createBlendedGradientAndRingPattern(a: Color, b: Color): Pattern {
+        const gradientPattern = this.createGradientPattern(a, b);
+        const ringPattern = this.createRingPattern(a, b);
+        return new BlendedPattern(gradientPattern, ringPattern);
+    }
+
+    static createPerturbedGradientAndRingPattern(a: Color, b: Color): Pattern {
+        const gradientPattern = this.createGradientPattern(a, b);
+        return this.createPerturbedPattern(gradientPattern);
+    }
+
+    static createNestedPattern(a: Pattern, b: Pattern): Pattern {
+        return new NestedPattern(a, b);
+    }
+
+    private static createPerturbedPattern(pattern: Pattern) {
+        return new PerturbedPattern(pattern);
+    }
 }
+

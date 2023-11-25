@@ -7,7 +7,7 @@ import {BLACK, WHITE} from "./lib/constants/raycaster.constants";
 
 export class RaycasterCanvasComponent {
 
-    size = 400;
+    size = 600;
     sectorSize = this.size < 100 ? Math.round((this.size / 100) * 10) : (this.size / 100) * 10;
     counterFrom_X = 0;
     counterTo_X = this.sectorSize;
@@ -133,11 +133,22 @@ export class RaycasterCanvasComponent {
     }
 
     draw(from_x: number, to_x: number, from_y: number, to_y: number) {
+
+        const backgroundPlane: Plane = RayCasterBuilder.createPlane();
+        backgroundPlane.setTransform(RayCasterArithmetic.multiplyMatrix(RayCasterBuilder.getRotationMatrixX(Math.PI / 2),
+            RayCasterBuilder.getTranslationMatrix(0, 200, 0)));
+        const backgroundMaterial: Material = backgroundPlane.getMaterial();
+        backgroundMaterial.pattern = RayCasterBuilder.createNestedPattern(RayCasterBuilder.createPerturbedGradientAndRingPattern(new Color(1, 0, 0), new Color(0, 0, 1)),
+            RayCasterBuilder.createGradientPattern(new Color(1, 1, 0), new Color(1, 0, 1)));
+        backgroundMaterial.pattern.setTransform(RayCasterBuilder.getScalingMatrix(0.1, 0.1, 0.1));
+        backgroundPlane.setMaterial(backgroundMaterial);
+
         const plane: Plane = RayCasterBuilder.createPlane();
         plane.setTransform(RayCasterBuilder.getTranslationMatrix(0, 0.01, 0));
         const floorMaterial: Material = plane.getMaterial();
         floorMaterial.setColor(new Color(1, 0.9, 0.9));
         floorMaterial.setSpecular(0);
+        floorMaterial.pattern = RayCasterBuilder.createBlendedGradientAndRingPattern(new Color(1, 0, 0), new Color(0, 0, 1));
         plane.setMaterial(floorMaterial);
 
         const middleSphere: Sphere = RayCasterBuilder.createSphere();
@@ -156,8 +167,11 @@ export class RaycasterCanvasComponent {
             )
         );
         const rightSphereMaterial: Material = rightSphere.getMaterial();
+        const rightSpherePattern = RayCasterBuilder.createGradientPattern(new Color(1, 0, 0), new Color(1, 1, 0));
+        rightSpherePattern.setTransform(RayCasterBuilder.getScalingMatrix(2, 2, 2));
         rightSphereMaterial.setDiffuse(0.7);
         rightSphereMaterial.setSpecular(0.3);
+        rightSphereMaterial.pattern = rightSpherePattern;
         rightSphere.setMaterial(rightSphereMaterial);
 
         const leftSphere: Sphere = RayCasterBuilder.createSphere();
@@ -170,7 +184,8 @@ export class RaycasterCanvasComponent {
         const leftSphereMaterial: Material = leftSphere.getMaterial();
         leftSphereMaterial.setDiffuse(0.7);
         leftSphereMaterial.setSpecular(0.3);
-        leftSphereMaterial.pattern = RayCasterBuilder.buildStripePattern(WHITE, BLACK);
+        leftSphereMaterial.pattern = RayCasterBuilder.createNestedStripeAndGradientPattern(new Color(1, 1, 0), new Color(1, 0, 1));
+        leftSphereMaterial.pattern.setTransform(RayCasterBuilder.getScalingMatrix(0.5, 0.5, 0.5));
         leftSphere.setMaterial(leftSphereMaterial);
 
         const world: World = RayCasterBuilder.createDefaultWorld();
@@ -178,7 +193,7 @@ export class RaycasterCanvasComponent {
         const lightSource: Light = RayCasterBuilder.createPointLight(new Point(-10, 10, -10), new Color(1, 1, 1));
 
         world.setLightSource(lightSource);
-        world.setShapes([plane, leftSphere, middleSphere, rightSphere]);
+        world.setShapes([plane, leftSphere, middleSphere, rightSphere, backgroundPlane]);
 
         // only add the plane and middleSphere to the world
         // world.setShapes([plane, middleSphere]);
