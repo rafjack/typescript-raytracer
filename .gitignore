@@ -49,7 +49,7 @@ build/*
 
 # Dependency directories
 node_modules/
-jspm_packages/
+jspm_ns/
 
 # TypeScript v1 declaration files
 typings/
