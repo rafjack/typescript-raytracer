@@ -4,6 +4,7 @@ import {
     Camera,
     Canvas,
     Color,
+    Computations,
     Intersection,
     Intersections,
     Light,
@@ -533,4 +534,107 @@ describe('raycaster.builder.spec', () => {
             intersections.getIntersectionAt(0).getShape().equals(plane)
         ).toBeTruthy();
     });
+
+    // reflectivity for the default material
+    it('The default material', () => {
+        // GIVEN a material
+        const m: Material = RayCasterBuilder.createDefaultMaterial();
+
+        // THEN the default material has reflectivity 0.0
+        expect(m.getReflective() === 0.0).toBeTruthy();
+    });
+
+    // show that the precomputing the reflection precomputes the reflectv vector
+    it('Precomputing the reflection vector', () => {
+        // GIVEN a plane
+        const plane: Plane = RayCasterBuilder.createPlane();
+
+        // WHEN
+        const ray: Ray = RayCasterBuilder.createRay(
+            new Point(0, 1, -1),
+            new Vector(0, -Math.sqrt(2) / 2, Math.sqrt(2) / 2)
+        );
+        const intersection: Intersection = RayCasterBuilder.createIntersection(
+            Math.sqrt(2),
+            plane
+        );
+        const comps: Computations = RayCasterArithmetic.prepareComputations(intersection, ray);
+
+        // THEN
+        expect(comps.getReflectV().equals(new Vector(0, Math.sqrt(2) / 2, Math.sqrt(2) / 2))).toBeTruthy();
+    });
+
+    // The reflected color for a nonreflective material
+    it('The reflected color for a nonreflective material', () => {
+        // GIVEN a world
+        const world: World = RayCasterBuilder.createDefaultWorld();
+
+        // WHEN
+        const ray: Ray = RayCasterBuilder.createRay(
+            new Point(0, 0, 0),
+            new Vector(0, 0, 1)
+        );
+        const shape: Shape = world.getShapes()[1];
+        shape.getMaterial().setAmbient(1);
+        const intersection: Intersection = RayCasterBuilder.createIntersection(
+            1,
+            shape
+        );
+        const comps: Computations = RayCasterArithmetic.prepareComputations(intersection, ray);
+        const color: Color = RayCasterArithmetic.reflectedColor(world, comps, 0);
+
+        // THEN
+        expect(color.equals(new Color(0, 0, 0))).toBeTruthy();
+    });
+    
+    // color at with mutually reflective surfaces
+    it('color at with mutually reflective surfaces', () => {
+        // GIVEN a world
+        const world: World = RayCasterBuilder.createDefaultWorld();
+        const lower: Shape = RayCasterBuilder.createPlane();
+        lower.getMaterial().setReflective(1);
+        lower.getMaterial().setAmbient(0);
+        lower.setTransform(RayCasterBuilder.getTranslationMatrix(0, -1, 0));
+        const upper: Shape = RayCasterBuilder.createPlane();
+        upper.getMaterial().setReflective(1);
+        upper.setTransform(RayCasterBuilder.getTranslationMatrix(0, 1, 0));
+        upper.getMaterial().setAmbient(0);
+        world.setShapes([lower, upper]);
+
+        // WHEN
+        const ray: Ray = RayCasterBuilder.createRay(
+            new Point(0, 0, 0),
+            new Vector(0, 1, 0)
+        );
+        const color: Color = RayCasterArithmetic.colorAt(world, ray, 0);
+
+        // THEN
+        expect(color.equals(new Color(0.0, 0.0, 0.0))).toBeTruthy();
+    });
+
+    // The reflected color at the maximum recursive depth
+    it('The reflected color at the maximum recursive depth', () => {
+        // GIVEN a world
+        const world: World = RayCasterBuilder.createDefaultWorld();
+        const shape: Shape = RayCasterBuilder.createPlane();
+        shape.getMaterial().setReflective(0.5);
+        shape.setTransform(RayCasterBuilder.getTranslationMatrix(0, -1, 0));
+        world.setShapes([shape]);
+
+        // WHEN
+        const ray: Ray = RayCasterBuilder.createRay(
+            new Point(0, 0, -3),
+            new Vector(0, -Math.sqrt(2) / 2, Math.sqrt(2) / 2)
+        );
+        const intersection: Intersection = RayCasterBuilder.createIntersection(
+            Math.sqrt(2),
+            shape
+        );
+        const comps: Computations = RayCasterArithmetic.prepareComputations(intersection, ray);
+        const color: Color = RayCasterArithmetic.reflectedColor(world, comps, 0);
+
+        // THEN
+        expect(color.equals(new Color(0, 0, 0))).toBeTruthy();
+    });
+
 });

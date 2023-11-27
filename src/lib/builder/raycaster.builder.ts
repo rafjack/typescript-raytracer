@@ -184,9 +184,10 @@ export class RayCasterBuilder {
         diffuse: number,
         specular: number,
         shininess: number,
-        color: Color
+        color: Color,
+        reflective: number,
     ): Material {
-        return new Material(ambient, diffuse, specular, shininess, color);
+        return new Material(ambient, diffuse, specular, shininess, color, reflective);
     }
 
     static createWorld(): World {

@@ -18,7 +18,7 @@ import {
     Vector,
     World,
 } from '../model/raycaster.model';
-import {RAYCASTER_EPSILON} from "../constants/raycaster.constants";
+import {RAYCASTER_EPSILON, RECURSION_DEPTH} from "../constants/raycaster.constants";
 
 export class RayCasterArithmetic {
     static addPoints(a: Point, b: Point): Vector {
@@ -476,6 +476,8 @@ export class RayCasterArithmetic {
             RayCasterArithmetic.multiplyPoint(normalV, RAYCASTER_EPSILON)
         );
 
+        let reflectV: Vector = RayCasterArithmetic.reflect(ray.getDirection(), normalV);
+
         return new Computations(
             intersection.getT(),
             intersection.getShape(),
@@ -483,11 +485,12 @@ export class RayCasterArithmetic {
             overPoint,
             eyeV,
             normalV,
-            inside
+            inside,
+            reflectV
         );
     }
 
-    static shadeHit(world: World, computations: Computations): Color {
+    static shadeHit(world: World, computations: Computations, remaining = RECURSION_DEPTH): Color {
         // NOTE: at the moment there is only support for one light source
         // to support multiple light source iterate over all the light
         // sources and add the colors together
@@ -499,7 +502,7 @@ export class RayCasterArithmetic {
                 computations.getOverPoint()
             );
 
-            return RayCasterArithmetic.lighting(
+            let surfaceColor: Color = RayCasterArithmetic.lighting(
                 computations.getObject().getMaterial(),
                 computations.getObject(),
                 lightSource,
@@ -508,11 +511,15 @@ export class RayCasterArithmetic {
                 computations.getNormalV(),
                 isShadowed
             );
+
+            let reflectedColor = RayCasterArithmetic.reflectedColor(world, computations, remaining);
+
+            return RayCasterArithmetic.addColors(surfaceColor, reflectedColor);
         }
         throw new Error('Unable to calculate shade without lightSource in world');
     }
 
-    static colorAt(world: World, ray: Ray): Color {
+    static colorAt(world: World, ray: Ray, remaining = RECURSION_DEPTH): Color {
         const intersections: Intersections = world.intersect(ray);
         const intersectionResult: Intersection | null =
             RayCasterArithmetic.getHit(intersections);
@@ -521,7 +528,7 @@ export class RayCasterArithmetic {
                 intersectionResult,
                 ray
             );
-            return RayCasterArithmetic.shadeHit(world, preparedComputations);
+            return RayCasterArithmetic.shadeHit(world, preparedComputations, remaining);
         } else {
             return new Color(0, 0, 0);
         }
@@ -619,5 +626,23 @@ export class RayCasterArithmetic {
             return false;
         }
         throw new Error('Error there is no light source is present in this world');
+    }
+
+    static reflectedColor(world: World, comps: Computations, remaining: number): Color {
+        if (remaining <= 0) {
+            return new Color(0, 0, 0);
+        }
+        if (comps.getObject().getMaterial().getReflective() === 0) {
+            return new Color(0, 0, 0);
+        }
+        const reflectRay = RayCasterBuilder.createRay(
+            comps.getOverPoint(),
+            comps.getReflectV()
+        );
+        const color = RayCasterArithmetic.colorAt(world, reflectRay, remaining - 1);
+        return RayCasterArithmetic.multiplyColor(
+            color,
+            comps.getObject().getMaterial().getReflective()
+        );
     }
 }
