@@ -447,7 +447,8 @@ export class RayCasterArithmetic {
 
     static prepareComputations(
         intersection: Intersection,
-        ray: Ray
+        ray: Ray,
+        intersections: Intersections = new Intersections()
     ): Computations {
         // precompute some useful values
         const point: Point = RayCasterArithmetic.getRayPosition(
@@ -476,17 +477,51 @@ export class RayCasterArithmetic {
             RayCasterArithmetic.multiplyPoint(normalV, RAYCASTER_EPSILON)
         );
 
+        const underPoint: Point = RayCasterArithmetic.substractTuples(
+            point,
+            RayCasterArithmetic.multiplyPoint(normalV, RAYCASTER_EPSILON)
+        );
+
         let reflectV: Vector = RayCasterArithmetic.reflect(ray.getDirection(), normalV);
+
+        let n1: number = 1;
+        let n2: number = 1;
+        const containers: Shape[] = [];
+        for (const i of intersections.getIntersections()) {
+            if (i === intersection) {
+                if (containers.length === 0) {
+                    n1 = 1;
+                } else {
+                    n1 = containers[containers.length - 1].getMaterial().getRefractiveIndex();
+                }
+            }
+            if (containers.includes(i.getShape())) {
+                containers.splice(containers.indexOf(i.getShape()), 1);
+            } else {
+                containers.push(i.getShape());
+            }
+            if (i === intersection) {
+                if (containers.length === 0) {
+                    n2 = 1;
+                } else {
+                    n2 = containers[containers.length - 1].getMaterial().getRefractiveIndex();
+                }
+                break;
+            }
+        }
 
         return new Computations(
             intersection.getT(),
             intersection.getShape(),
             point,
             overPoint,
+            underPoint,
             eyeV,
             normalV,
             inside,
-            reflectV
+            reflectV,
+            n1,
+            n2
         );
     }
 
@@ -513,8 +548,17 @@ export class RayCasterArithmetic {
             );
 
             let reflectedColor = RayCasterArithmetic.reflectedColor(world, computations, remaining);
+            let refractedColor = RayCasterArithmetic.refractedColor(world, computations, remaining);
 
-            return RayCasterArithmetic.addColors(surfaceColor, reflectedColor);
+            const material = computations.getObject().getMaterial();
+            if (material.getReflective() > 0 && material.getTransparency() > 0) {
+                const reflectance: number = RayCasterArithmetic.schlick(computations);
+                reflectedColor = RayCasterArithmetic.multiplyColor(reflectedColor, reflectance);
+                refractedColor = RayCasterArithmetic.multiplyColor(refractedColor, 1 - reflectance);
+                return RayCasterArithmetic.addColors(RayCasterArithmetic.addColors(surfaceColor, reflectedColor), refractedColor);
+            } else {
+                return RayCasterArithmetic.addColors(RayCasterArithmetic.addColors(surfaceColor, reflectedColor), refractedColor);
+            }
         }
         throw new Error('Unable to calculate shade without lightSource in world');
     }
@@ -644,5 +688,72 @@ export class RayCasterArithmetic {
             color,
             comps.getObject().getMaterial().getReflective()
         );
+    }
+
+    static refractedColor(world: World, comps: Computations, remaining: number): Color {
+        // return black if the recursion limit has been reached
+        if (remaining <= 0) {
+            return new Color(0, 0, 0);
+        }
+
+        // return black if the material is not transparent
+        if (comps.getObject().getMaterial().getTransparency() === 0) {
+            return new Color(0, 0, 0);
+        }
+
+        // find the ratio of first index of refraction to the second
+        // and the angle of incidence
+        const nRatio = comps.getN1() / comps.getN2();
+        const cosI = RayCasterArithmetic.dotProduct(comps.getEyeV(), comps.getNormalV());
+        // sin2_t is the "sine squared" of the angle of refraction
+        const sin2_t = Math.pow(nRatio, 2) * (1 - Math.pow(cosI, 2));
+        // return black if the angle of refraction is greater than 1
+        if (sin2_t > 1) {
+            return new Color(0, 0, 0);
+        }
+
+        // find the cosine of theta_t using trigonometric identity
+        const cosT = Math.sqrt(1.0 - sin2_t);
+
+        // compute the direction of the refracted ray
+        const direction = RayCasterArithmetic.substractVectors(
+            RayCasterArithmetic.multiplyVector(comps.getNormalV(), nRatio * cosI - cosT),
+            RayCasterArithmetic.multiplyVector(comps.getEyeV(), nRatio)
+        );
+
+        // create the refracted ray
+        const refractRay = RayCasterBuilder.createRay(comps.getUnderPoint(), direction);
+
+        // find the color of the refracted ray, making sure to multiply
+        // by the transparency value to account for any opacity
+        const color = RayCasterArithmetic.colorAt(world, refractRay, remaining - 1);
+
+        return RayCasterArithmetic.multiplyColor(
+            color,
+            comps.getObject().getMaterial().getTransparency()
+        );
+    }
+
+    static schlick(comps: Computations) {
+        // find the cosine of the angle between the eye and normal vectors
+        let cos = RayCasterArithmetic.dotProduct(comps.getEyeV(), comps.getNormalV());
+
+        // total internal reflection can only occur if n1 > n2
+        if (comps.getN1() > comps.getN2()) {
+            const n = comps.getN1() / comps.getN2();
+            const sin2_t = Math.pow(n, 2) * (1 - Math.pow(cos, 2));
+            if (sin2_t > 1) {
+                return 1;
+            }
+
+            // compute cosine of theta_t using trigonometric identity
+            const cos_t = Math.sqrt(1.0 - sin2_t);
+
+            // when n1 > n2, use cos(theta_t) instead
+            cos = cos_t;
+        }
+
+        const r0 = Math.pow((comps.getN1() - comps.getN2()) / (comps.getN1() + comps.getN2()), 2);
+        return r0 + (1 - r0) * Math.pow(1 - cos, 5);
     }
 }

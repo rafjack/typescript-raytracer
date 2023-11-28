@@ -25,7 +25,8 @@ import {
     Pattern,
     PerturbedPattern,
     RingPattern,
-    StripePattern
+    StripePattern,
+    TestPattern
 } from "../feature/raycaster.pattern";
 
 export class RayCasterBuilder {
@@ -186,8 +187,10 @@ export class RayCasterBuilder {
         shininess: number,
         color: Color,
         reflective: number,
+        transparency: number,
+        refractiveIndex: number
     ): Material {
-        return new Material(ambient, diffuse, specular, shininess, color, reflective);
+        return new Material(ambient, diffuse, specular, shininess, color, reflective, transparency, refractiveIndex);
     }
 
     static createWorld(): World {
@@ -253,6 +256,18 @@ export class RayCasterBuilder {
 
     static createNestedPattern(a: Pattern, b: Pattern): Pattern {
         return new NestedPattern(a, b);
+    }
+
+    static createTestPattern(): Pattern {
+        return new TestPattern();
+    }
+
+    static createGlassSphere() {
+        const sphere: Sphere = this.createSphere();
+        sphere.setTransform(this.getScalingMatrix(0.5, 0.5, 0.5));
+        sphere.getMaterial().setTransparency(1.0);
+        sphere.getMaterial().setRefractiveIndex(1.5);
+        return sphere;
     }
 
     private static createPerturbedPattern(pattern: Pattern) {

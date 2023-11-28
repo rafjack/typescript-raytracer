@@ -260,6 +260,8 @@ export abstract class Shape {
             material.getShininess(),
             material.getColor(),
             material.getReflective(),
+            material.getTransparency(),
+            material.getRefractiveIndex()
         );
         this.material.pattern = material.pattern;
     }
@@ -464,6 +466,8 @@ export class Material {
         private shininess = 200.0,
         private color = new Color(1, 1, 1),
         private reflective = 0.0,
+        private transparency = 0.0,
+        private refractiveIndex = 1.0
     ) {
         if (ambient < 0 || diffuse < 0 || specular < 0 || shininess < 0) {
             throw new Error('Material value < 0 is invalid');
@@ -522,6 +526,22 @@ export class Material {
         this.reflective = reflective;
     }
 
+    getTransparency(): number {
+        return this.transparency;
+    }
+
+    setTransparency(transparency: number) {
+        this.transparency = transparency;
+    }
+
+    getRefractiveIndex(): number {
+        return this.refractiveIndex;
+    }
+
+    setRefractiveIndex(refractiveIndex: number) {
+        this.refractiveIndex = refractiveIndex;
+    }
+
     equals(o: Material): boolean {
         return (
             RayCasterArithmetic.numberEquals(o.ambient, this.ambient) &&
@@ -529,6 +549,8 @@ export class Material {
             RayCasterArithmetic.numberEquals(o.specular, this.specular) &&
             RayCasterArithmetic.numberEquals(o.shininess, this.shininess) &&
             RayCasterArithmetic.numberEquals(o.reflective, this.reflective) &&
+            RayCasterArithmetic.numberEquals(o.transparency, this.transparency) &&
+            RayCasterArithmetic.numberEquals(o.refractiveIndex, this.refractiveIndex) &&
             o.color.equals(this.color)
         );
     }
@@ -591,10 +613,13 @@ export class Computations {
         private object: Shape,
         private point: Point,
         private overPoint: Point,
+        private underPoint: Point,
         private eyeV: Vector,
         private normalV: Vector,
         private inside: boolean,
-        private reflectV: Vector
+        private reflectV: Vector,
+        private n1: number,
+        private n2: number,
     ) {
     }
 
@@ -626,8 +651,20 @@ export class Computations {
         return this.overPoint;
     }
 
+    getUnderPoint(): Point {
+        return this.underPoint;
+    }
+
     getReflectV(): Vector {
         return this.reflectV;
+    }
+
+    getN1(): number {
+        return this.n1;
+    }
+
+    getN2(): number {
+        return this.n2;
     }
 }
 

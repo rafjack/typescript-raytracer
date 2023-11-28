@@ -24,6 +24,17 @@ export abstract class Pattern {
     }
 }
 
+export class TestPattern extends Pattern {
+
+    constructor() {
+        super();
+    }
+
+    colorAt(point: Point): Color {
+        return new Color(point.x, point.y, point.z);
+    }
+}
+
 export class StripePattern extends Pattern {
 
     constructor(public a: Color,
