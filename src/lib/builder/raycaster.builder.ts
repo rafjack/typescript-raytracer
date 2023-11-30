@@ -3,6 +3,7 @@ import {
     Camera,
     Canvas,
     Color,
+    Cube,
     Intersection,
     Light,
     Material,
@@ -268,6 +269,10 @@ export class RayCasterBuilder {
         sphere.getMaterial().setTransparency(1.0);
         sphere.getMaterial().setRefractiveIndex(1.5);
         return sphere;
+    }
+
+    static createCube(): Cube {
+        return new Cube();
     }
 
     private static createPerturbedPattern(pattern: Pattern) {

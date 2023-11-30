@@ -4,6 +4,7 @@ import {
     Camera,
     Color,
     Computations,
+    Cube,
     Environment,
     Intersection,
     Intersections,
@@ -2039,5 +2040,49 @@ describe('raycaster.math.spec', () => {
         expect(
             computations.getPoint().z > computations.getOverPoint().z
         ).toBeTruthy();
+    });
+
+    it('a ray intersects a cube', () => {
+        // GIVEN
+        const c: Cube = RayCasterBuilder.createCube();
+        const ray: Ray = RayCasterBuilder.createRay(
+            new Point(5, 0.5, 0),
+            new Vector(-1, 0, 0)
+        );
+
+        // WHEN
+        const xs: Intersections = c.intersect(ray);
+
+        // THEN
+        expect(xs.getCount() === 2).toBeTruthy();
+        expect(xs.getIntersectionAt(0).getT() === 4).toBeTruthy();
+        expect(xs.getIntersectionAt(1).getT() === 6).toBeTruthy();
+    });
+
+    it('a ray misses a cube', () => {
+        // GIVEN
+        const c: Cube = RayCasterBuilder.createCube();
+        const ray: Ray = RayCasterBuilder.createRay(
+            new Point(-2, 0, 0),
+            new Vector(0.2673, 0.5345, 0.8018)
+        );
+
+        // WHEN
+        const xs: Intersections = c.intersect(ray);
+
+        // THEN
+        expect(xs.getCount() === 0).toBeTruthy();
+    });
+
+    it('the normal on the surface of a cube', () => {
+        // GIVEN
+        const c: Cube = RayCasterBuilder.createCube();
+        const point: Point = RayCasterBuilder.createPoint(1, 0.5, -0.8);
+
+        // WHEN
+        const normal: Vector = c.normalAt(point);
+
+        // THEN
+        expect(normal.equals(new Vector(1, 0, 0))).toBeTruthy();
     });
 });

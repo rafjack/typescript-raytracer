@@ -391,6 +391,75 @@ export class Sphere extends Shape {
     }
 }
 
+export class Cube extends Shape {
+    constructor() {
+        super();
+    }
+
+    local_normal_at(point: Point): Vector {
+        const maxc = Math.max(
+            Math.abs(point.x),
+            Math.abs(point.y),
+            Math.abs(point.z)
+        );
+        if (maxc === Math.abs(point.x)) {
+            return new Vector(point.x, 0, 0);
+        } else if (maxc === Math.abs(point.y)) {
+            return new Vector(0, point.y, 0);
+        }
+        return new Vector(0, 0, point.z);
+    }
+
+    local_intersect(ray: Ray): Intersections {
+
+        const [xtmin, xtmax] = this.checkAxis(ray.getOrigin().x, ray.getDirection().x);
+        const [ytmin, ytmax] = this.checkAxis(ray.getOrigin().y, ray.getDirection().y);
+        const [ztmin, ztmax] = this.checkAxis(ray.getOrigin().z, ray.getDirection().z);
+
+        const tmin = Math.max(
+            xtmin,
+            ytmin,
+            ztmin
+        );
+
+        const tmax = Math.min(
+            xtmax,
+            ytmax,
+            ztmax
+        );
+
+        if (tmin > tmax) {
+            return new Intersections();
+        }
+        return new Intersections(
+            new Intersection(tmin, this),
+            new Intersection(tmax, this)
+        );
+    }
+
+    private checkAxis(origin: number, direction: number) {
+        const tmin_numerator = (-1 - origin);
+        const tmax_numerator = (1 - origin);
+        let tmin: number;
+        let tmax: number;
+        if (Math.abs(direction) >= 0.0001) {
+            tmin = tmin_numerator / direction;
+            tmax = tmax_numerator / direction;
+        } else {
+            tmin = tmin_numerator * Number.POSITIVE_INFINITY;
+            tmax = tmax_numerator * Number.POSITIVE_INFINITY;
+        }
+
+        if (tmin > tmax) {
+            const temp = tmin;
+            tmin = tmax;
+            tmax = temp;
+        }
+
+        return [tmin, tmax];
+    }
+}
+
 export class Intersection {
     constructor(private t: number, private shape: Shape) {
     }
