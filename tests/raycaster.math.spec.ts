@@ -2119,12 +2119,31 @@ describe('raycaster.math.spec', () => {
     it('the normal on the surface of a cube', () => {
         // GIVEN
         const c: Cube = RayCasterBuilder.createCube();
-        const point: Point = RayCasterBuilder.createPoint(1, 0.5, -0.8);
 
-        // WHEN
-        const normal: Vector = c.normalAt(point);
+        const points: Point[] = [
+            RayCasterBuilder.createPoint(1, 0.5, -0.8),
+            RayCasterBuilder.createPoint(-1, -0.2, 0.9),
+            RayCasterBuilder.createPoint(-0.4, 1, -0.1),
+            RayCasterBuilder.createPoint(0.3, -1, -0.7),
+            RayCasterBuilder.createPoint(-0.6, 0.3, 1),
+            RayCasterBuilder.createPoint(0.4, 0.4, -1),
+            RayCasterBuilder.createPoint(1, 1, 1),
+            RayCasterBuilder.createPoint(-1, -1, -1)
+        ];
+        const normals: Vector[] = [
+            RayCasterBuilder.createVector(1, 0, 0),
+            RayCasterBuilder.createVector(-1, 0, 0),
+            RayCasterBuilder.createVector(0, 1, 0),
+            RayCasterBuilder.createVector(0, -1, 0),
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(0, 0, -1),
+            RayCasterBuilder.createVector(1, 0, 0),
+            RayCasterBuilder.createVector(-1, 0, 0)
+        ];
 
-        // THEN
-        expect(normal.equals(new Vector(1, 0, 0))).toBeTruthy();
+        for (let i = 0; i < points.length; i++) {
+            const normal: Vector = c.normalAt(points[i]);
+            expect(normal.equals(normals[i])).toBeTruthy();
+        }
     });
 });
