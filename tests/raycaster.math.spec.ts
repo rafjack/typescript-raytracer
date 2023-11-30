@@ -2050,28 +2050,70 @@ describe('raycaster.math.spec', () => {
             new Vector(-1, 0, 0)
         );
 
-        // WHEN
-        const xs: Intersections = c.intersect(ray);
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(5, 0.5, 0),
+            RayCasterBuilder.createPoint(-5, 0.5, 0),
+            RayCasterBuilder.createPoint(0.5, 5, 0),
+            RayCasterBuilder.createPoint(0.5, -5, 0),
+            RayCasterBuilder.createPoint(0.5, 0, 5),
+            RayCasterBuilder.createPoint(0.5, 0, -5),
+            RayCasterBuilder.createPoint(0, 0.5, 0)
+        ];
 
-        // THEN
-        expect(xs.getCount() === 2).toBeTruthy();
-        expect(xs.getIntersectionAt(0).getT() === 4).toBeTruthy();
-        expect(xs.getIntersectionAt(1).getT() === 6).toBeTruthy();
+        const testDirections: Vector[] = [
+            RayCasterBuilder.createVector(-1, 0, 0),
+            RayCasterBuilder.createVector(1, 0, 0),
+            RayCasterBuilder.createVector(0, -1, 0),
+            RayCasterBuilder.createVector(0, 1, 0),
+            RayCasterBuilder.createVector(0, 0, -1),
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(0, 0, 1)
+        ];
+
+        const testResultsT1: number[] = [4, 4, 4, 4, 4, 4, -1];
+        const testResultsT2: number[] = [6, 6, 6, 6, 6, 6, 1];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const ray: Ray = RayCasterBuilder.createRay(testPoints[i], testDirections[i]);
+            const xs: Intersections = c.intersect(ray);
+            expect(xs.getCount() === 2).toBeTruthy();
+            expect(xs.getIntersectionAt(0).getT() === testResultsT1[i]).toBeTruthy();
+            expect(xs.getIntersectionAt(1).getT() === testResultsT2[i]).toBeTruthy();
+        }
+
     });
 
     it('a ray misses a cube', () => {
         // GIVEN
         const c: Cube = RayCasterBuilder.createCube();
         const ray: Ray = RayCasterBuilder.createRay(
-            new Point(-2, 0, 0),
-            new Vector(0.2673, 0.5345, 0.8018)
+            new Point(5, 0.5, 0),
+            new Vector(-1, 0, 0)
         );
 
-        // WHEN
-        const xs: Intersections = c.intersect(ray);
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(-2, 0, 0),
+            RayCasterBuilder.createPoint(0, -2, 0),
+            RayCasterBuilder.createPoint(0, 0, -2),
+            RayCasterBuilder.createPoint(2, 0, 2),
+            RayCasterBuilder.createPoint(0, 2, 2),
+            RayCasterBuilder.createPoint(2, 2, 0)
+        ];
 
-        // THEN
-        expect(xs.getCount() === 0).toBeTruthy();
+        const testDirections: Vector[] = [
+            RayCasterBuilder.createVector(0.2673, 0.5345, 0.8018),
+            RayCasterBuilder.createVector(0.8018, 0.2673, 0.5345),
+            RayCasterBuilder.createVector(0.5345, 0.8018, 0.2673),
+            RayCasterBuilder.createVector(0, 0, -1),
+            RayCasterBuilder.createVector(0, -1, 0),
+            RayCasterBuilder.createVector(-1, 0, 0)
+        ];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const ray: Ray = RayCasterBuilder.createRay(testPoints[i], testDirections[i]);
+            const xs: Intersections = c.intersect(ray);
+            expect(xs.getCount() === 0).toBeTruthy();
+        }
     });
 
     it('the normal on the surface of a cube', () => {
