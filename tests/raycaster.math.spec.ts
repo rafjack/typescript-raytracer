@@ -5,6 +5,7 @@ import {
     Color,
     Computations,
     Cube,
+    Cylinder,
     Environment,
     Intersection,
     Intersections,
@@ -2146,4 +2147,243 @@ describe('raycaster.math.spec', () => {
             expect(normal.equals(normals[i])).toBeTruthy();
         }
     });
+
+    // a ray misses a cylinder
+    it('a ray misses a cylinder', () => {
+        // GIVEN
+        const cyl: Cylinder = RayCasterBuilder.createCylinder();
+        const ray: Ray = RayCasterBuilder.createRay(
+            new Point(1, 0, 0),
+            new Vector(0, 1, 0)
+        );
+
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(1, 0, 0),
+            RayCasterBuilder.createPoint(0, 0, 0),
+            RayCasterBuilder.createPoint(0, 0, -5),
+        ];
+
+        const testDirections: Vector[] = [
+            RayCasterBuilder.createVector(0, 1, 0),
+            RayCasterBuilder.createVector(0, 1, 0),
+            RayCasterBuilder.createVector(1, 1, 1)
+        ];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const ray: Ray = RayCasterBuilder.createRay(testPoints[i], testDirections[i]);
+            const xs: Intersections = cyl.intersect(ray);
+            expect(xs.getCount() === 0).toBeTruthy();
+        }
+    });
+
+    it('a ray strikes a cylinder', () => {
+        // GIVEN
+        const cyl: Cylinder = RayCasterBuilder.createCylinder();
+
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(1, 0, -5),
+            RayCasterBuilder.createPoint(0, 0, -5),
+            RayCasterBuilder.createPoint(0.5, 0, -5)
+        ];
+
+        const testDirections: Vector[] = [
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(0.1, 1, 1)
+        ];
+
+        const testResultsT1: number[] = [5, 4, 6.80798];
+        const testResultsT2: number[] = [5, 6, 7.08872];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const ray: Ray = RayCasterBuilder.createRay(testPoints[i], RayCasterArithmetic.normalize(testDirections[i]));
+            const xs: Intersections = cyl.intersect(ray);
+            expect(xs.getCount() === 2).toBeTruthy();
+            expect(RayCasterArithmetic.numberEquals(xs.getIntersectionAt(0).getT(), testResultsT1[i])).toBeTruthy();
+            expect(RayCasterArithmetic.numberEquals(xs.getIntersectionAt(1).getT(), testResultsT2[i])).toBeTruthy();
+        }
+    });
+
+    // normal vector on a cylinder
+    it('the normal vector on a cylinder', () => {
+        // GIVEN
+        const cyl: Cylinder = RayCasterBuilder.createCylinder();
+
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(1, 0, 0),
+            RayCasterBuilder.createPoint(0, 5, -1),
+            RayCasterBuilder.createPoint(0, -2, 1),
+            RayCasterBuilder.createPoint(-1, 1, 0)
+        ];
+
+        const testNormals: Vector[] = [
+            RayCasterBuilder.createVector(1, 0, 0),
+            RayCasterBuilder.createVector(0, 0, -1),
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(-1, 0, 0)
+        ];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const normal: Vector = cyl.normalAt(testPoints[i]);
+            expect(normal.equals(testNormals[i])).toBeTruthy();
+        }
+    });
+
+    it('the default minimum and maximum for a cylinder', () => {
+        // GIVEN
+        const cyl: Cylinder = RayCasterBuilder.createCylinder();
+        // THEN
+        expect(cyl.minimum === -Infinity).toBeTruthy();
+        expect(cyl.maximum === Infinity).toBeTruthy();
+    });
+
+    // intersecting a constrained cylinder
+    it('intersecting a constrained cylinder', () => {
+        // GIVEN
+        const cyl: Cylinder = RayCasterBuilder.createCylinder();
+        cyl.minimum = 1;
+        cyl.maximum = 2;
+
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(0, 1.5, 0),
+            RayCasterBuilder.createPoint(0, 3, -5),
+            RayCasterBuilder.createPoint(0, 0, -5),
+            RayCasterBuilder.createPoint(0, 2, -5),
+            RayCasterBuilder.createPoint(0, 1, -5),
+            RayCasterBuilder.createPoint(0, 1.5, -2)
+        ];
+
+        const testDirections: Vector[] = [
+            RayCasterBuilder.createVector(0.1, 1, 0),
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(0, 0, 1)
+        ];
+
+        const count = [0, 0, 0, 0, 0, 2];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const ray: Ray = RayCasterBuilder.createRay(testPoints[i], RayCasterArithmetic.normalize(testDirections[i]));
+            const xs: Intersections = cyl.local_intersect(ray);
+            expect(xs.getCount() === count[i]).toBeTruthy();
+        }
+
+    });
+
+    it('the default closed value for a cylinder', () => {
+        // GIVEN
+        const cyl: Cylinder = RayCasterBuilder.createCylinder();
+        // THEN
+        expect(cyl.closed).toBeFalsy();
+    });
+
+    it('intersecting the caps of a closed cylinder', () => {
+        // GIVEN
+        const cyl: Cylinder = RayCasterBuilder.createCylinder();
+        cyl.minimum = 1;
+        cyl.maximum = 2;
+        cyl.closed = true;
+
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(0, 3, 0),
+            RayCasterBuilder.createPoint(0, 3, -2),
+            RayCasterBuilder.createPoint(0, 4, -2),
+            RayCasterBuilder.createPoint(0, 0, -2),
+            RayCasterBuilder.createPoint(0, -1, -2)
+        ];
+
+        const testDirections: Vector[] = [
+            RayCasterBuilder.createVector(0, -1, 0),
+            RayCasterBuilder.createVector(0, -1, 2),
+            RayCasterBuilder.createVector(0, -1, 1),
+            RayCasterBuilder.createVector(0, 1, 2),
+            RayCasterBuilder.createVector(0, 1, 1)
+        ];
+
+        const count = [2, 2, 2, 2, 2];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const ray: Ray = RayCasterBuilder.createRay(testPoints[i], RayCasterArithmetic.normalize(testDirections[i]));
+            const xs: Intersections = cyl.local_intersect(ray);
+            expect(xs.getCount() === count[i]).toBeTruthy();
+        }
+    });
+
+    // the normal vector on a cylinder's end caps
+    it('the normal vector on a cylinders end caps', () => {
+        // GIVEN
+        const cyl: Cylinder = RayCasterBuilder.createCylinder();
+        cyl.minimum = 1;
+        cyl.maximum = 2;
+        cyl.closed = true;
+
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(0, 1, 0),
+            RayCasterBuilder.createPoint(0.5, 1, 0),
+            RayCasterBuilder.createPoint(0, 1, 0.5),
+            RayCasterBuilder.createPoint(0, 2, 0),
+            RayCasterBuilder.createPoint(0.5, 2, 0),
+            RayCasterBuilder.createPoint(0, 2, 0.5)
+        ];
+
+        const testNormals: Vector[] = [
+            RayCasterBuilder.createVector(0, -1, 0),
+            RayCasterBuilder.createVector(0, -1, 0),
+            RayCasterBuilder.createVector(0, -1, 0),
+            RayCasterBuilder.createVector(0, 1, 0),
+            RayCasterBuilder.createVector(0, 1, 0),
+            RayCasterBuilder.createVector(0, 1, 0)
+        ];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const normal: Vector = cyl.local_normal_at(testPoints[i]);
+            expect(normal.equals(testNormals[i])).toBeTruthy();
+        }
+    });
+
+    it('Intersecting a cone with a ray', () => {
+        // GIVEN
+        const cone: DoubleNappedCone = RayCasterBuilder.createCone();
+
+        const testPoints: Point[] = [
+            RayCasterBuilder.createPoint(0, 0, -5),
+            RayCasterBuilder.createPoint(0, 0, -5),
+            RayCasterBuilder.createPoint(1, 1, -5)
+        ];
+
+        const testDirections: Vector[] = [
+            RayCasterBuilder.createVector(0, 0, 1),
+            RayCasterBuilder.createVector(1, 1, 1),
+            RayCasterBuilder.createVector(-0.5, -1, 1)
+        ];
+
+        const testResultsT1: number[] = [5, 8.66025, 4.55006];
+        const testResultsT2: number[] = [5, 8.66025, 49.44994];
+
+        for (let i = 0; i < testPoints.length; i++) {
+            const ray: Ray = RayCasterBuilder.createRay(testPoints[i], RayCasterArithmetic.normalize(testDirections[i]));
+            const xs: Intersections = cone.local_intersect(ray);
+            expect(xs.getCount() === 2).toBeTruthy();
+            expect(RayCasterArithmetic.numberEquals(xs.getIntersectionAt(0).getT(), testResultsT1[i])).toBeTruthy();
+            expect(RayCasterArithmetic.numberEquals(xs.getIntersectionAt(1).getT(), testResultsT2[i])).toBeTruthy();
+        }
+    });
+
+    it('Intersecting a cone with a ray parallel to one of its halves', () => {
+        // GIVEN
+        const cone: DoubleNappedCone = RayCasterBuilder.createCone();
+
+        const ray: Ray = RayCasterBuilder.createRay(
+            new Point(0, 0, -1),
+            new Vector(0, 1, 1)
+        );
+
+        const xs: Intersections = cone.local_intersect(ray);
+        expect(xs.getCount() === 1).toBeTruthy();
+        expect(RayCasterArithmetic.numberEquals(xs.getIntersectionAt(0).getT(), 0.35355)).toBeTruthy();
+    });
+
+
 });

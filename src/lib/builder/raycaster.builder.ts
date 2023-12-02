@@ -4,6 +4,7 @@ import {
     Canvas,
     Color,
     Cube,
+    Cylinder,
     Intersection,
     Light,
     Material,
@@ -275,8 +276,13 @@ export class RayCasterBuilder {
         return new Cube();
     }
 
+    static createCylinder(): Cylinder {
+        return new Cylinder();
+    }
+
     private static createPerturbedPattern(pattern: Pattern) {
         return new PerturbedPattern(pattern);
     }
+
 }
 

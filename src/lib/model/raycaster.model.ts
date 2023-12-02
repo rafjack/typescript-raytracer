@@ -416,32 +416,23 @@ export class Cube extends Shape {
         const [ytmin, ytmax] = this.checkAxis(ray.getOrigin().y, ray.getDirection().y);
         const [ztmin, ztmax] = this.checkAxis(ray.getOrigin().z, ray.getDirection().z);
 
-        const tmin = Math.max(
-            xtmin,
-            ytmin,
-            ztmin
-        );
-
-        const tmax = Math.min(
-            xtmax,
-            ytmax,
-            ztmax
-        );
+        const tmin = Math.max(xtmin, ytmin, ztmin);
+        const tmax = Math.min(xtmax, ytmax, ztmax);
 
         if (tmin > tmax) {
             return new Intersections();
         }
-        return new Intersections(
-            new Intersection(tmin, this),
-            new Intersection(tmax, this)
-        );
+
+        return new Intersections(new Intersection(tmin, this), new Intersection(tmax, this));
     }
 
     private checkAxis(origin: number, direction: number) {
-        const tmin_numerator = (-1 - origin);
-        const tmax_numerator = (1 - origin);
+        const tmin_numerator = -1 - origin;
+        const tmax_numerator = 1 - origin;
+
         let tmin: number;
         let tmax: number;
+
         if (Math.abs(direction) >= 0.0001) {
             tmin = tmin_numerator / direction;
             tmax = tmax_numerator / direction;
@@ -457,6 +448,85 @@ export class Cube extends Shape {
         }
 
         return [tmin, tmax];
+    }
+}
+
+export class Cylinder extends Shape {
+
+    constructor(public minimum = Number.NEGATIVE_INFINITY, public maximum = Number.POSITIVE_INFINITY, public closed = false) {
+        super();
+    }
+
+    local_normal_at(point: Point): Vector {
+        const dist = Math.pow(point.x, 2) + Math.pow(point.z, 2);
+        if (dist < 1 && point.y >= this.maximum - 0.0001) {
+            return new Vector(0, 1, 0);
+        } else if (dist < 1 && point.y <= this.minimum + 0.0001) {
+            return new Vector(0, -1, 0);
+        }
+        return new Vector(point.x, 0, point.z);
+    }
+
+    local_intersect(ray: Ray): Intersections {
+        const a = Math.pow(ray.getDirection().x, 2) + Math.pow(ray.getDirection().z, 2);
+        if (Math.abs(a) < 0.0001) {
+            return this.intersectCaps(ray);
+        }
+        const b = 2 * ray.getOrigin().x * ray.getDirection().x + 2 * ray.getOrigin().z * ray.getDirection().z;
+        const c = Math.pow(ray.getOrigin().x, 2) + Math.pow(ray.getOrigin().z, 2) - 1;
+        const discriminant = Math.pow(b, 2) - 4 * a * c;
+        if (discriminant < 0) {
+            return new Intersections();
+        }
+        let t0 = (-b - Math.sqrt(discriminant)) / (2 * a);
+        let t1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+        if (t0 > t1) {
+            const temp = t0;
+            t0 = t1;
+            t1 = temp;
+        }
+        const xs: Intersection[] = [];
+
+        const y0 = ray.getOrigin().y + t0 * ray.getDirection().y;
+        if (this.minimum < y0 && y0 < this.maximum) {
+            xs.push(new Intersection(t0, this));
+        }
+
+        const y1 = ray.getOrigin().y + t1 * ray.getDirection().y;
+        if (this.minimum < y1 && y1 < this.maximum) {
+            xs.push(new Intersection(t1, this));
+        }
+
+        xs.push(...this.intersectCaps(ray).getIntersections());
+
+        return new Intersections(...xs);
+    }
+
+    checkCap(ray: Ray, t: number): boolean {
+        const x = ray.getOrigin().x + t * ray.getDirection().x;
+        const z = ray.getOrigin().z + t * ray.getDirection().z;
+
+        return (Math.pow(x, 2) + Math.pow(z, 2)) <= 1;
+    }
+
+    intersectCaps(ray: Ray): Intersections {
+        const xs: Intersection[] = [];
+
+        if (!this.closed || Math.abs(ray.getDirection().y) < 0.0001) {
+            return new Intersections();
+        }
+
+        let t = (this.minimum - ray.getOrigin().y) / ray.getDirection().y;
+        if (this.checkCap(ray, t)) {
+            xs.push(new Intersection(t, this));
+        }
+
+        t = (this.maximum - ray.getOrigin().y) / ray.getDirection().y;
+        if (this.checkCap(ray, t)) {
+            xs.push(new Intersection(t, this));
+        }
+
+        return new Intersections(...xs);
     }
 }
 
