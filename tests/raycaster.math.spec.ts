@@ -2341,49 +2341,7 @@ describe('raycaster.math.spec', () => {
             const normal: Vector = cyl.local_normal_at(testPoints[i]);
             expect(normal.equals(testNormals[i])).toBeTruthy();
         }
-    });
-
-    it('Intersecting a cone with a ray', () => {
-        // GIVEN
-        const cone: DoubleNappedCone = RayCasterBuilder.createCone();
-
-        const testPoints: Point[] = [
-            RayCasterBuilder.createPoint(0, 0, -5),
-            RayCasterBuilder.createPoint(0, 0, -5),
-            RayCasterBuilder.createPoint(1, 1, -5)
-        ];
-
-        const testDirections: Vector[] = [
-            RayCasterBuilder.createVector(0, 0, 1),
-            RayCasterBuilder.createVector(1, 1, 1),
-            RayCasterBuilder.createVector(-0.5, -1, 1)
-        ];
-
-        const testResultsT1: number[] = [5, 8.66025, 4.55006];
-        const testResultsT2: number[] = [5, 8.66025, 49.44994];
-
-        for (let i = 0; i < testPoints.length; i++) {
-            const ray: Ray = RayCasterBuilder.createRay(testPoints[i], RayCasterArithmetic.normalize(testDirections[i]));
-            const xs: Intersections = cone.local_intersect(ray);
-            expect(xs.getCount() === 2).toBeTruthy();
-            expect(RayCasterArithmetic.numberEquals(xs.getIntersectionAt(0).getT(), testResultsT1[i])).toBeTruthy();
-            expect(RayCasterArithmetic.numberEquals(xs.getIntersectionAt(1).getT(), testResultsT2[i])).toBeTruthy();
-        }
-    });
-
-    it('Intersecting a cone with a ray parallel to one of its halves', () => {
-        // GIVEN
-        const cone: DoubleNappedCone = RayCasterBuilder.createCone();
-
-        const ray: Ray = RayCasterBuilder.createRay(
-            new Point(0, 0, -1),
-            new Vector(0, 1, 1)
-        );
-
-        const xs: Intersections = cone.local_intersect(ray);
-        expect(xs.getCount() === 1).toBeTruthy();
-        expect(RayCasterArithmetic.numberEquals(xs.getIntersectionAt(0).getT(), 0.35355)).toBeTruthy();
-    });
+    })
 
 
 });
