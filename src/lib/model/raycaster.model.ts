@@ -217,6 +217,7 @@ export abstract class Shape {
     id: string;
     matrix: Matrix;
     material: Material;
+    parent: Shape | null = null;
 
     constructor() {
         this.matrix = RayCasterBuilder.createIdentityMatrix(4);
@@ -253,17 +254,11 @@ export abstract class Shape {
     }
 
     setMaterial(material: Material) {
-        this.material = RayCasterBuilder.createMaterial(
-            material.getAmbient(),
-            material.getDiffuse(),
-            material.getSpecular(),
-            material.getShininess(),
-            material.getColor(),
-            material.getReflective(),
-            material.getTransparency(),
-            material.getRefractiveIndex()
-        );
-        this.material.pattern = material.pattern;
+        this.material = material;
+    }
+
+    getParent(): Shape | null {
+        return this.parent;
     }
 
     normalAt(point: Point): Vector {
@@ -299,6 +294,37 @@ export abstract class Shape {
         return normal;
     }
 
+    worldToObject(point: Point): Point {
+        if (this.parent) {
+            point = this.parent.worldToObject(point);
+        }
+        return RayCasterArithmetic.multiplyMatrixWithPoint(
+            RayCasterArithmetic.inverse(this.getTransform()),
+            point
+        );
+    }
+
+    normalToWorld(normal: Vector): Vector {
+        normal = RayCasterArithmetic.multiplyMatrixWithVector(
+            RayCasterArithmetic.transpose(
+                RayCasterArithmetic.inverse(this.getTransform())
+            ),
+            normal
+        );
+        normal.w = 0;
+        normal = RayCasterArithmetic.normalize(normal);
+        if (this.parent) {
+            normal = this.parent.normalToWorld(normal);
+        }
+        return normal;
+    }
+
+    normal_at(point: Point): Vector {
+        const local_point: Point = this.worldToObject(point);
+        const local_normal: Vector = this.local_normal_at(local_point);
+        return this.normalToWorld(local_normal);
+    }
+
     abstract local_normal_at(point: Point): Vector;
 
     abstract local_intersect(ray: Ray): Intersections;
@@ -309,6 +335,7 @@ export abstract class Shape {
             this.matrix.equals(otherSphere.getTransform())
         );
     }
+
 }
 
 export class TestShape extends Shape {
@@ -530,6 +557,90 @@ export class Cylinder extends Shape {
     }
 }
 
+export class Cone extends Shape {
+    constructor(public minimum = Number.NEGATIVE_INFINITY, public maximum = Number.POSITIVE_INFINITY, public closed = false) {
+        super();
+    }
+
+    local_normal_at(point: Point): Vector {
+        let dist = Math.pow(point.x, 2) + Math.pow(point.z, 2);
+
+        if (dist < 1.0 && point.y >= this.maximum - 0.0001) {
+            return new Vector(0.0, 1.0, 0.0);
+        }
+
+        if (dist < 1.0 && point.y <= this.minimum + 0.0001) {
+            return new Vector(0.0, -1.0, 0.0);
+        }
+
+        let y = Math.sqrt(Math.pow(point.x, 2) + Math.pow(point.z, 2))
+
+        if (point.y > 0.0) {
+            y = -y;
+        }
+        return new Vector(point.x, y, point.z);
+    }
+
+    local_intersect(ray: Ray): Intersections {
+        const a = Math.pow(ray.getDirection().x, 2) - Math.pow(ray.getDirection().y, 2) + Math.pow(ray.getDirection().z, 2);
+        const b = 2 * ray.getOrigin().x * ray.getDirection().x - 2 * ray.getOrigin().y * ray.getDirection().y + 2 * ray.getOrigin().z * ray.getDirection().z;
+        const c = Math.pow(ray.getOrigin().x, 2) - Math.pow(ray.getOrigin().y, 2) + Math.pow(ray.getOrigin().z, 2);
+        const discriminant = Math.pow(b, 2) - 4 * a * c;
+        if (discriminant < 0) {
+            return new Intersections();
+        }
+        let t0 = (-b - Math.sqrt(discriminant)) / (2 * a);
+        let t1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+        if (t0 > t1) {
+            const temp = t0;
+            t0 = t1;
+            t1 = temp;
+        }
+        const xs: Intersections = new Intersections();
+
+        const y0 = ray.getOrigin().y + t0 * ray.getDirection().y;
+        if (this.minimum < y0 && y0 < this.maximum) {
+            xs.getIntersections().push(new Intersection(t0, this));
+        }
+
+        const y1 = ray.getOrigin().y + t1 * ray.getDirection().y;
+        if (this.minimum < y1 && y1 < this.maximum) {
+            xs.getIntersections().push(new Intersection(t1, this));
+        }
+
+        xs.getIntersections().push(...this.intersectCaps(ray, xs).getIntersections());
+
+        return xs;
+    }
+
+    checkCap(ray: Ray, t: number, radius: number): boolean {
+        const x = ray.getOrigin().x + t * ray.getDirection().x;
+        const z = ray.getOrigin().z + t * ray.getDirection().z;
+
+        return (Math.pow(x, 2) + Math.pow(z, 2)) <= Math.pow(radius, 2);
+    }
+
+    intersectCaps(ray: Ray, xs: Intersections): Intersections {
+
+        if (!this.closed || Math.abs(ray.getDirection().y) < 0.0001) {
+            return xs
+        }
+
+        let t = (this.minimum - ray.getOrigin().y) / ray.getDirection().y;
+        if (this.checkCap(ray, t, this.minimum)) {
+            xs.getIntersections().push(new Intersection(t, this));
+        }
+
+        t = (this.maximum - ray.getOrigin().y) / ray.getDirection().y;
+        if (this.checkCap(ray, t, this.maximum)) {
+            xs.getIntersections().push(new Intersection(t, this));
+        }
+
+        return xs;
+
+    }
+}
+
 export class Intersection {
     constructor(private t: number, private shape: Shape) {
     }
@@ -591,6 +702,54 @@ export class Light {
         return (
             this.position.equals(o.position) && this.intensity.equals(o.intensity)
         );
+    }
+}
+
+// the group class is a shape that contains other shapes
+export class Group extends Shape {
+    constructor(private shapes: Shape[] = []) {
+        super();
+    }
+
+    getShapes(): Shape[] {
+        return this.shapes;
+    }
+
+    setShapes(shapes: Shape[]) {
+        this.shapes = shapes;
+    }
+
+    local_normal_at(point: Point): Vector {
+        throw new Error('Not implemented');
+    }
+
+    local_intersect(ray: Ray): Intersections {
+        const result: Intersections = new Intersections();
+        this.shapes.forEach((shape) => {
+            const xs = shape.intersect(ray);
+            result.getIntersections().push(...xs.getIntersections());
+        });
+        result.getIntersections().sort((a, b) => {
+            return a.getT() - b.getT();
+        });
+        return result;
+    }
+
+    equals(o: Group): boolean {
+        if (this.shapes.length !== o.shapes.length) {
+            return false;
+        }
+        for (let i = 0; i < this.shapes.length; i++) {
+            if (!this.shapes[i].equals(o.shapes[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    addChild(s: Shape) {
+        s.parent = this;
+        this.shapes.push(s);
     }
 }
 

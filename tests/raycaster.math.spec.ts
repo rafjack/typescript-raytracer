@@ -2341,7 +2341,6 @@ describe('raycaster.math.spec', () => {
             const normal: Vector = cyl.local_normal_at(testPoints[i]);
             expect(normal.equals(testNormals[i])).toBeTruthy();
         }
-    })
-
+    });
 
 });

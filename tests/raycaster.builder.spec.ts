@@ -5,6 +5,7 @@ import {
     Canvas,
     Color,
     Computations,
+    Group,
     Intersection,
     Intersections,
     Light,
@@ -931,6 +932,149 @@ describe('raycaster.builder.spec', () => {
         // THEN
         // expect(color.equals(new Color(0.93391, 0.69643, 0.69243))).toBeTruthy();
 
+    });
+
+    it('creating a new group', () => {
+        // GIVEN a group
+        const g: Group = new Group();
+
+        // THEN
+        expect(g.getTransform().equals(RayCasterBuilder.createIdentityMatrix(4))).toBeTruthy();
+        expect(g.getShapes().length === 0).toBeTruthy();
+    });
+
+    it('a shape has a parent attribute', () => {
+        // GIVEN a test shape
+        const s: Shape = RayCasterBuilder.createTestShape();
+
+        // THEN
+        expect(s.getParent() === null).toBeTruthy();
+    });
+
+    // adding a child to a group
+    it('adding a child to a group', () => {
+        // GIVEN a group
+        const g: Group = new Group();
+
+        // WHEN
+        const s: Shape = RayCasterBuilder.createTestShape();
+        g.addChild(s);
+
+        // THEN
+        expect(g.getShapes().length === 1).toBeTruthy();
+        expect(s.getParent()?.equals(g)).toBeTruthy();
+    });
+
+    // intersecting a ray with an empty group
+    it('intersecting a ray with an empty group', () => {
+        // GIVEN a group
+        const g: Group = new Group();
+
+        // WHEN
+        const ray: Ray = RayCasterBuilder.createRay(new Point(0, 0, 0), new Vector(0, 0, 1));
+        const xs: Intersections = g.local_intersect(ray);
+
+        // THEN
+        expect(xs.getCount() === 0).toBeTruthy();
+    });
+
+    // intersecting a ray with a nonempty group
+    it('intersecting a ray with a nonempty group', () => {
+        // GIVEN a group
+        const g: Group = new Group();
+        const s1: Shape = RayCasterBuilder.createSphere();
+        const s2: Shape = RayCasterBuilder.createSphere();
+        s2.setTransform(RayCasterBuilder.getTranslationMatrix(0, 0, -3));
+        const s3: Shape = RayCasterBuilder.createSphere();
+        s3.setTransform(RayCasterBuilder.getTranslationMatrix(5, 0, 0));
+        g.addChild(s1);
+        g.addChild(s2);
+        g.addChild(s3);
+
+        // WHEN
+        const ray: Ray = RayCasterBuilder.createRay(new Point(0, 0, -5), new Vector(0, 0, 1));
+        const xs: Intersections = g.local_intersect(ray);
+
+        // THEN
+        expect(xs.getCount() === 4).toBeTruthy();
+        expect(xs.getIntersectionAt(0).getShape().equals(s2)).toBeTruthy();
+        expect(xs.getIntersectionAt(1).getShape().equals(s2)).toBeTruthy();
+        expect(xs.getIntersectionAt(2).getShape().equals(s1)).toBeTruthy();
+        expect(xs.getIntersectionAt(3).getShape().equals(s1)).toBeTruthy();
+    });
+
+    // intersecting a transformed group
+    it('intersecting a transformed group', () => {
+        // GIVEN a group
+        const g: Group = new Group();
+        g.setTransform(RayCasterBuilder.getScalingMatrix(2, 2, 2));
+        const s: Shape = RayCasterBuilder.createSphere();
+        s.setTransform(RayCasterBuilder.getTranslationMatrix(5, 0, 0));
+        g.addChild(s);
+
+        // WHEN
+        const ray: Ray = RayCasterBuilder.createRay(new Point(10, 0, -10), new Vector(0, 0, 1));
+        const xs: Intersections = g.intersect(ray);
+
+        // THEN
+        expect(xs.getCount() === 2).toBeTruthy();
+    });
+
+    // converting a point from world to object space
+    it('converting a point from world to object space', () => {
+        // GIVEN a group
+        const g1: Group = new Group();
+        g1.setTransform(RayCasterBuilder.getRotationMatrixY(Math.PI / 2));
+        const g2: Group = new Group();
+        g2.setTransform(RayCasterBuilder.getScalingMatrix(2, 2, 2));
+        g1.addChild(g2);
+        const s: Shape = RayCasterBuilder.createSphere();
+        s.setTransform(RayCasterBuilder.getTranslationMatrix(5, 0, 0));
+        g2.addChild(s);
+
+        // WHEN
+        const p: Point = s.worldToObject(new Point(-2, 0, -10));
+
+        // THEN
+        expect(p.equals(new Point(0, 0, -1))).toBeTruthy();
+    });
+
+    // converting a normal from object to world space
+    it('converting a normal from object to world space', () => {
+        // GIVEN a group
+        const g1: Group = new Group();
+        g1.setTransform(RayCasterBuilder.getRotationMatrixY(Math.PI / 2));
+        const g2: Group = new Group();
+        g2.setTransform(RayCasterBuilder.getScalingMatrix(1, 2, 3));
+        g1.addChild(g2);
+        const s: Shape = RayCasterBuilder.createSphere();
+        s.setTransform(RayCasterBuilder.getTranslationMatrix(5, 0, 0));
+        g2.addChild(s);
+
+        // WHEN
+        const n: Vector = s.normalToWorld(new Vector(Math.sqrt(3) / 3, Math.sqrt(3) / 3, Math.sqrt(3) / 3));
+
+        // THEN
+        expect(n.equals(new Vector(0.28571, 0.42857, -0.85714))).toBeTruthy();
+    });
+
+    // finding the normal on a child object
+    it('finding the normal on a child object', () => {
+        // GIVEN a group
+        const g1: Group = new Group();
+        g1.setTransform(RayCasterBuilder.getRotationMatrixY(Math.PI / 2));
+        const g2: Group = new Group();
+        g2.setTransform(RayCasterBuilder.getScalingMatrix(1, 2, 3));
+        g1.addChild(g2);
+        const s: Shape = RayCasterBuilder.createSphere();
+        s.setTransform(RayCasterBuilder.getTranslationMatrix(5, 0, 0));
+        g2.addChild(s);
+
+        // WHEN
+        const n: Vector = s.normal_at(new Point(1.7321, 1.1547, -5.5774));
+
+        // THEN
+        expect(n.equals(new Vector(0.28570, 0.42854, -0.85716))).toBeTruthy();
     });
 
 });

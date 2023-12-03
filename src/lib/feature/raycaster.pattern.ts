@@ -16,9 +16,7 @@ export abstract class Pattern {
     }
 
     colorAtShape(shape: Shape, worldPoint: Point): Color {
-        // what  could be the problem when the gradient is not covering the whole shape
-
-        const objectPoint = RayCasterArithmetic.multiplyMatrixWithPoint(RayCasterArithmetic.inverse(shape.getTransform()), worldPoint);
+        const objectPoint = shape.worldToObject(worldPoint);
         const patternPoint = RayCasterArithmetic.multiplyMatrixWithPoint(RayCasterArithmetic.inverse(this.matrix), objectPoint);
         return this.colorAt(patternPoint);
     }

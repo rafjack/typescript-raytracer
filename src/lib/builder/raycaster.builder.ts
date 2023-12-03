@@ -3,8 +3,10 @@ import {
     Camera,
     Canvas,
     Color,
+    Cone,
     Cube,
     Cylinder,
+    Group,
     Intersection,
     Light,
     Material,
@@ -280,9 +282,20 @@ export class RayCasterBuilder {
         return new Cylinder();
     }
 
+    static createCone(): Cone {
+        return new Cone();
+
+    }
+
+    static createGroup(): Group {
+        return new Group();
+    }
+
     private static createPerturbedPattern(pattern: Pattern) {
         return new PerturbedPattern(pattern);
     }
 
+
 }
+
 
